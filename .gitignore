@@ -1,9 +1,8 @@
-/code/*.exe
-/.idea
-/data/*.csv
-/venv
-.idea/velopix_noise.iml
+code/*.exe
+.idea/*
+.idea
+data/*.csv
+venv
 code/dim_decoding
 code/dim_equalisation
-.idea/velopix_noise.iml
 *.png
