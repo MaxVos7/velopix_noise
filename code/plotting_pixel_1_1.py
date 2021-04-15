@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 # Plot a specific pixel.
 def plot_pixel(filename):
-    data = np.array(np.loadtxt('../data/' + filename, delimiter=','))
+    data = np.array(np.loadtxt('../data/' + filename, delimiter=',', dtype=int))
     plt.plot(data[:, 0], data[:, 1], marker='.')
     plt.xlabel('DAC treshold')
     plt.ylabel('Number of hits')
