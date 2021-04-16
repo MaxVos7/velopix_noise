@@ -325,8 +325,8 @@ def plot_noise_histogram(filename, trim) :
     plt.savefig(filename+"_Plot_Hist_Noise_"+trim+".png", bbox_inches='tight', format='png')
 
 if (len(sys.argv)!=4):
-    print "Usage: python plotting_equalisation.py <file prefix> minThr maxThr"
-    print "Example: python plotting_equalisation.py /home/velo/tmp/Module1_VP0-0 1100 1800"
+    print("Usage: python plotting_equalisation.py <file prefix> minThr maxThr")
+    print("Example: python plotting_equalisation.py /home/velo/tmp/Module1_VP0-0 1100 1800")
     exit
 
 prefix = sys.argv[1]
