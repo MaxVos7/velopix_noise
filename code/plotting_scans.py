@@ -38,6 +38,7 @@ def plot_scans(filename, dacMin, dacMax):
 
         words = files[i].split('_')
         hands[i] = mpatches.Patch(color=mycolors[i], label=words[-3])
+        handles.append(hands[i])
 
     plt.legend(bbox_to_anchor=(1.042, 0.3), loc=2, borderaxespad=0, handles=handles, frameon=False, handlelength=1.25)
 
