@@ -342,9 +342,9 @@ if (len(sys.argv) != 4):
     print("Example: python plotting_equalisation.py /home/velo/tmp/Module1_VP0-0 1100 1800")
     exit
 
-prefix = "C:/Users/maxvo/Documents/rug/bachelorthesis/velopix_noise/data/Module1_VP0-0"
-minThr = 1100
-maxThr = 1800
+prefix = sys.argv[1]
+minThr = sys.argv[2]
+maxThr = sys.argv[3]
 
 # plot_scan(prefix, minThr, maxThr)
 plot_mask(prefix)
