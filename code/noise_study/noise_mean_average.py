@@ -4,19 +4,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def getDecimaleTrimLevel(file: str) -> int:
-    return int(file.split('_')[-3][-1], 16)
+def getDecimalTrimLevel(file: str) -> int:
+    return int(file.split('_')[-7][-1], 16)
 
 
 def getMeanAveragePerTrim() -> np.array:
-    files = glob.glob('../data/Module1_VP0-0_Trim*_Noise_Mean.csv')
+    files = glob.glob('../../data/Module1_VP0-0_ECS_Scan_Trim*_Noise_Mean.csv')
 
     trimLevelArray = []
     meanAvarageArray = []
 
     for file in files:
         meanAverage = np.loadtxt(file, delimiter=',', dtype=int).mean()
-        decimalTrimLevel = getDecimaleTrimLevel(file)  # trim level in decimal value (0,1,..,14,15)
+        decimalTrimLevel = getDecimalTrimLevel(file)  # trim level in decimal value (0,1,..,14,15)
         trimLevelArray.append(decimalTrimLevel)
         meanAvarageArray.append(meanAverage)
 
@@ -26,8 +26,6 @@ def getMeanAveragePerTrim() -> np.array:
 (trimLevelArray, meanAverageArray) = getMeanAveragePerTrim()
 
 poly = np.poly1d(np.polyfit(trimLevelArray, meanAverageArray, 1))
-
-print(poly, poly(0), poly(1))
 
 plt.ylabel("Average of noise means")
 plt.xlabel("Trim level")
