@@ -9,13 +9,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-def getTrimMatrix(trim_level: str) -> np.array:
+def get_trim_matrix(trim_level: str) -> np.array:
     """
     This method fetches the noise mean array for a specific trim level.
     For this it uses the "Module1_VP0-0_Trim*_Noise_mean.csv file.
     """
     files = glob.glob(f"../../data/Module1_VP0-0_Trim{trim_level}_Noise_Mean.csv")
-    if (len(files) < 1):
+    if len(files) < 1:
         raise FileNotFoundError(f"No file found for Noise mean of trim level {trim_level}.")
     else:
         file = files[0]
@@ -23,27 +23,27 @@ def getTrimMatrix(trim_level: str) -> np.array:
     return np.array(np.loadtxt(file, delimiter=',', dtype=int))
 
 
-def getNoiseMeanPrediction(decTrimArray: list, trimMatrixArray: list, row: int, col: int, trimLevel: str) -> int:
-    decTrimLevel = int(trimLevel, 16)
+def get_noise_mean_prediction(dec_trim_array: list, trim_matrix_array: list, row: int, col: int, trim_level: str) -> int:
+    dec_trim_level = int(trim_level, 16)
 
-    trimDataArray = list(map(lambda trimMatrix: trimMatrix[row][col], trimMatrixArray))
+    trim_data_array = list(map(lambda trimMatrix: trimMatrix[row][col], trim_matrix_array))
 
-    poly = np.poly1d(np.polyfit(decTrimArray, trimDataArray, 1))
+    poly = np.poly1d(np.polyfit(dec_trim_array, trim_data_array, 1))
 
-    return poly(decTrimLevel)
+    return poly(dec_trim_level)
 
 
-def checkForZeroValues(trimDataArray: list, row: int, col: int) -> bool:
-    for trimData in trimDataArray:
-        if trimData[row][col] == 0:
+def check_for_zero_values(trim_data_array: list, row: int, col: int) -> bool:
+    for trim_data in trim_data_array:
+        if trim_data[row][col] == 0:
             return True
 
     return False
 
 
-def makeDistanceToPredictedArray(trimsToPredictWith: list, trimToPredict: str) -> tuple[list, int]:
-    trimsToPredictWithMatrices = list(map(lambda trim: getTrimMatrix(trim), trimsToPredictWith))
-    trimToPredictMatrix = getTrimMatrix(trimToPredict)
+def make_distance_to_predicted_array(trims_to_predict_with: list, trim_to_predict: str) -> tuple[list, int]:
+    trims_to_predict_with_matrices = list(map(lambda trim: get_trim_matrix(trim), trims_to_predict_with))
+    trim_to_predict_matrix = get_trim_matrix(trim_to_predict)
 
     """
     This method makes an array with the distance to the predicted value per pixel.
@@ -54,46 +54,48 @@ def makeDistanceToPredictedArray(trimsToPredictWith: list, trimToPredict: str) -
     :param toPredictTrim: Give the trim level that is the to be predicted (trim level of the trimToPredictArray)
     :return: An 1D array of distance to predicted value.
     """
-    distanceToPredictedArray = []
-    amountNotUsed = 0
-    decTrimArray = list(map(lambda trim: int(trim, 16), trimsToPredictWith))
-    for i in range(trimToPredictMatrix.shape[0]):
-        for j in range(trimToPredictMatrix.shape[1]):
-            if trimToPredictMatrix[i][j] != 0 and not checkForZeroValues(trimsToPredictWithMatrices, i, j):
-                noiseMeanPrediction = getNoiseMeanPrediction(decTrimArray, trimsToPredictWithMatrices, i, j,
-                                                             trimToPredict)
-                distanceToPredictedArray.append(noiseMeanPrediction - trimToPredictMatrix[i][j])
+    distance_to_predicted_array = []
+    amount_not_used = 0
+    dec_trim_array = list(map(lambda trim: int(trim, 16), trims_to_predict_with))
+    for i in range(trim_to_predict_matrix.shape[0]):
+        for j in range(trim_to_predict_matrix.shape[1]):
+            if trim_to_predict_matrix[i][j] != 0 and not check_for_zero_values(trims_to_predict_with_matrices, i, j):
+                noise_mean_prediction = get_noise_mean_prediction(dec_trim_array, trims_to_predict_with_matrices, i, j,
+                                                                trim_to_predict)
+                distance_to_predicted_array.append(noise_mean_prediction - trim_to_predict_matrix[i][j])
             else:
-                amountNotUsed += 1
+                amount_not_used += 1
 
-    return (distanceToPredictedArray, amountNotUsed)
+    return distance_to_predicted_array, amount_not_used
 
 
-def makeHistogram(predictionOffsetArray: list, trimsToPredictWith: list, trimToPredict: str, amountNotUsed: int):
-    hist_data = np.histogram(predictionOffsetArray,
-                             np.arange(min(predictionOffsetArray), max(predictionOffsetArray), 1))
+def make_histogram(prediction_offset_array: list, trims_to_predict_with: list, trim_to_predict: str, amount_not_used: int):
+    hist_data = np.histogram(prediction_offset_array,
+                             np.arange(min(prediction_offset_array), max(prediction_offset_array), 1))
     logs = hist_data[0].astype(float)
-    plt.semilogy(hist_data[1][:-1], logs, linestyle='-', label=f"{','.join(trimsToPredictWith)} -> {trimToPredict}")
-    print(f"{','.join(trimsToPredictWith)} -> {trimToPredict}")
-    print(f"mean: {round(np.mean(predictionOffsetArray), 2)}")
-    print(f"points used: {len(predictionOffsetArray)}")
-    print(f"points not used: {amountNotUsed}")
+    mean = round(np.mean(prediction_offset_array), 2)
+    plt.semilogy(hist_data[1][:-1], logs, linestyle='-',
+                 label=f"{','.join(trims_to_predict_with)} -> {trim_to_predict}, mean:{mean}")
+    print(f"{','.join(trims_to_predict_with)} -> {trim_to_predict}")
+    print(f"mean: {mean}")
+    print(f"points used: {len(prediction_offset_array)}")
+    print(f"points not used: {amount_not_used}")
 
 
 plt.xlabel("Predicted value - real value (current)")
 plt.ylabel("The amount of times the difference is found")
 
-(predictionOffset, amountNotUsed) = makeDistanceToPredictedArray(['0', '3', 'D', 'F'], 'D')
+(prediction_offset, amount_not_used) = make_distance_to_predicted_array(['0', '3', 'D', 'F'], 'D')
 
-makeHistogram(predictionOffset, ['0', '3', 'D', 'F'], 'D', amountNotUsed)
+make_histogram(prediction_offset, ['0', '3', 'D', 'F'], 'D', amount_not_used)
 
-(predictionOffset, amountNotUsed) = makeDistanceToPredictedArray(['0', '3', 'F'], 'D')
+(prediction_offset, amount_not_used) = make_distance_to_predicted_array(['0', '3', 'F'], 'D')
 
-makeHistogram(predictionOffset, ['0', '3', 'F'], 'D', amountNotUsed)
+make_histogram(prediction_offset, ['0', '3', 'F'], 'D', amount_not_used)
 
-(predictionOffset, amountNotUsed) = makeDistanceToPredictedArray(['0', 'F'], 'D')
+(prediction_offset, amount_not_used) = make_distance_to_predicted_array(['0', 'F'], 'D')
 
-makeHistogram(predictionOffset, ['0', 'F'], 'F', amountNotUsed)
+make_histogram(prediction_offset, ['0', 'F'], 'F', amount_not_used)
 
 plt.legend(loc='upper right')
 
