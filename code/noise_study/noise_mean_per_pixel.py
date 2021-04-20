@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-def fetch_noise_mean_array(trim_level: str) -> np.array:
+def getTrimMatrix(trim_level: str) -> np.array:
     """
     This method fetches the noise mean array for a specific trim level.
     For this it uses the "Module1_VP0-0_Trim*_Noise_mean.csv file.
@@ -41,8 +41,10 @@ def checkForZeroValues(trimDataArray: list, row: int, col: int) -> bool:
     return False
 
 
-def makeDistanceToPredictedArray(trimArray: list, trimDataArray: list, trimToPredictArray: np.array,
-                                 toPredictTrim: str) -> list:
+def makeDistanceToPredictedArray(trimsToPredictWith: list, trimToPredict: str) -> list:
+    trimsToPredictWithMatrices = list(map(lambda trim: getTrimMatrix(trim), trimsToPredictWith))
+    trimToPredictMatrix = getTrimMatrix(trimToPredict)
+
     """
     This method makes an array with the distance to the predicted value per pixel.
 
@@ -53,34 +55,37 @@ def makeDistanceToPredictedArray(trimArray: list, trimDataArray: list, trimToPre
     :return: An 1D array of distance to predicted value.
     """
     distanceToPredictedArray = []
-    decTrimArray = list(map(lambda trim: int(trim, 16), trimArray))
-    for i in range(trimToPredictArray.shape[0]):
-        for j in range(trimToPredictArray.shape[1]):
-            if trimToPredictArray[i][j] != 0 and not checkForZeroValues(trimDataArray, i, j):
-                noiseMeanPrediction = getNoiseMeanPrediction(decTrimArray, trimDataArray, i, j, toPredictTrim)
-                distanceToPredictedArray.append(
-                    trimToPredictArray[i][j] - noiseMeanPrediction)
+    amountNotUsed = 0
+    decTrimArray = list(map(lambda trim: int(trim, 16), trimsToPredictWith))
+    for i in range(trimToPredictMatrix.shape[0]):
+        for j in range(trimToPredictMatrix.shape[1]):
+            if trimToPredictMatrix[i][j] != 0 and not checkForZeroValues(trimsToPredictWithMatrices, i, j):
+                noiseMeanPrediction = getNoiseMeanPrediction(decTrimArray, trimsToPredictWithMatrices, i, j,
+                                                             trimToPredict)
+                distanceToPredictedArray.append(noiseMeanPrediction - trimToPredictMatrix[i][j])
+            else:
+                amountNotUsed += 1
 
-    return distanceToPredictedArray
+    return (distanceToPredictedArray, amountNotUsed)
 
 
-def showHistogram(predictionOffsetArray: list):
+def showHistogram(predictionOffsetArray: list, trimsToPredictWith: list, trimToPredict: str, amountNotUsed: int):
     hist_data = np.histogram(predictionOffsetArray,
                              np.arange(min(predictionOffsetArray), max(predictionOffsetArray), 1))
     logs = hist_data[0].astype(float)
     plt.semilogy(hist_data[1][:-1], logs, marker='.', linestyle='')
-    plt.suptitle("Use trim 0, D, F to predict trim D")
-    plt.xlabel("Difference of prediction and real value (current)")
-    plt.ylabel("The amount of times difference is found")
+    plt.suptitle(f"Use trim {','.join(trimsToPredictWith)} to predict trim {trimToPredict}")
+    plt.xlabel("Predicted value - real value (current)")
+    plt.ylabel("The amount of times the difference is found")
+    print(f"mean: {round(np.mean(predictionOffsetArray), 2)}")
+    print(f"points used: {len(predictionOffsetArray)}")
+    print(f"points not used: {amountNotUsed}")
     plt.show()
 
 
-trim0Array = fetch_noise_mean_array('0')
-trimFArray = fetch_noise_mean_array('F')
-trim1Array = fetch_noise_mean_array('1')
+trimsToPredictWith = ['0', '3', 'D', 'F']
+trimToPredict = 'D'
 
-trimDArray = fetch_noise_mean_array('D')
+(predictionOffset, amountNotUsed) = makeDistanceToPredictedArray(trimsToPredictWith, trimToPredict)
 
-predictionOffset = makeDistanceToPredictedArray(['0', 'F'], [trim0Array, trimFArray], trimDArray, 'D')
-
-showHistogram(predictionOffset)
+showHistogram(predictionOffset, trimsToPredictWith, trimToPredict, amountNotUsed)
