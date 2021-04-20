@@ -26,8 +26,8 @@ def getTrimMatrix(trim_level: str) -> np.array:
 def getNoiseMeanPrediction(decTrimArray: list, trimMatrixArray: list, row: int, col: int, trimLevel: str) -> int:
     decTrimLevel = int(trimLevel, 16)
 
-    # [0: 1200, 15: 1800, 4: 1500]
     trimDataArray = list(map(lambda trimMatrix: trimMatrix[row][col], trimMatrixArray))
+
     poly = np.poly1d(np.polyfit(decTrimArray, trimDataArray, 1))
 
     return poly(decTrimLevel)
@@ -41,7 +41,7 @@ def checkForZeroValues(trimDataArray: list, row: int, col: int) -> bool:
     return False
 
 
-def makeDistanceToPredictedArray(trimsToPredictWith: list, trimToPredict: str) -> list:
+def makeDistanceToPredictedArray(trimsToPredictWith: list, trimToPredict: str) -> tuple[list, int]:
     trimsToPredictWithMatrices = list(map(lambda trim: getTrimMatrix(trim), trimsToPredictWith))
     trimToPredictMatrix = getTrimMatrix(trimToPredict)
 
@@ -69,23 +69,32 @@ def makeDistanceToPredictedArray(trimsToPredictWith: list, trimToPredict: str) -
     return (distanceToPredictedArray, amountNotUsed)
 
 
-def showHistogram(predictionOffsetArray: list, trimsToPredictWith: list, trimToPredict: str, amountNotUsed: int):
+def makeHistogram(predictionOffsetArray: list, trimsToPredictWith: list, trimToPredict: str, amountNotUsed: int):
     hist_data = np.histogram(predictionOffsetArray,
                              np.arange(min(predictionOffsetArray), max(predictionOffsetArray), 1))
     logs = hist_data[0].astype(float)
-    plt.semilogy(hist_data[1][:-1], logs, marker='.', linestyle='')
-    plt.suptitle(f"Use trim {','.join(trimsToPredictWith)} to predict trim {trimToPredict}")
-    plt.xlabel("Predicted value - real value (current)")
-    plt.ylabel("The amount of times the difference is found")
+    plt.semilogy(hist_data[1][:-1], logs, linestyle='-', label=f"{','.join(trimsToPredictWith)} -> {trimToPredict}")
+    print(f"{','.join(trimsToPredictWith)} -> {trimToPredict}")
     print(f"mean: {round(np.mean(predictionOffsetArray), 2)}")
     print(f"points used: {len(predictionOffsetArray)}")
     print(f"points not used: {amountNotUsed}")
-    plt.show()
 
 
-trimsToPredictWith = ['0', '3', 'D', 'F']
-trimToPredict = 'D'
+plt.xlabel("Predicted value - real value (current)")
+plt.ylabel("The amount of times the difference is found")
 
-(predictionOffset, amountNotUsed) = makeDistanceToPredictedArray(trimsToPredictWith, trimToPredict)
+(predictionOffset, amountNotUsed) = makeDistanceToPredictedArray(['0', '3', 'D', 'F'], 'D')
 
-showHistogram(predictionOffset, trimsToPredictWith, trimToPredict, amountNotUsed)
+makeHistogram(predictionOffset, ['0', '3', 'D', 'F'], 'D', amountNotUsed)
+
+(predictionOffset, amountNotUsed) = makeDistanceToPredictedArray(['0', '3', 'F'], 'D')
+
+makeHistogram(predictionOffset, ['0', '3', 'F'], 'D', amountNotUsed)
+
+(predictionOffset, amountNotUsed) = makeDistanceToPredictedArray(['0', 'F'], 'D')
+
+makeHistogram(predictionOffset, ['0', 'F'], 'F', amountNotUsed)
+
+plt.legend(loc='upper right')
+
+plt.show()
