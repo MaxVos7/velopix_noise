@@ -33,6 +33,14 @@ def getNoiseMeanPrediction(decTrimArray: list, trimMatrixArray: list, row: int, 
     return poly(decTrimLevel)
 
 
+def checkForZeroValues(trimDataArray: list, row: int, col: int) -> bool:
+    for trimData in trimDataArray:
+        if trimData[row][col] == 0:
+            return True
+
+    return False
+
+
 def makeDistanceToPredictedArray(trimArray: list, trimDataArray: list, trimToPredictArray: np.array,
                                  toPredictTrim: str) -> list:
     """
@@ -48,9 +56,7 @@ def makeDistanceToPredictedArray(trimArray: list, trimDataArray: list, trimToPre
     decTrimArray = list(map(lambda trim: int(trim, 16), trimArray))
     for i in range(trimToPredictArray.shape[0]):
         for j in range(trimToPredictArray.shape[1]):
-            if trimToPredictArray[i][j] > 0 and trim0Array[i][j] > 0 and trimFArray[i][j] > 0:
-                continue
-            else:
+            if trimToPredictArray[i][j] != 0 and not checkForZeroValues(trimDataArray, i, j):
                 noiseMeanPrediction = getNoiseMeanPrediction(decTrimArray, trimDataArray, i, j, toPredictTrim)
                 distanceToPredictedArray.append(
                     trimToPredictArray[i][j] - noiseMeanPrediction)
