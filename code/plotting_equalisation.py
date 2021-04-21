@@ -342,7 +342,7 @@ if (len(sys.argv) != 4):
     print("Example: python plotting_equalisation.py /home/velo/tmp/Module1_VP0-0 1100 1800")
     exit
 
-prefix = sys.argv[1]
+prefix = "C:/Users/maxvo/Documents/rug/bachelorthesis/velopix_noise/data/Module1_VP0-0"
 minThr = sys.argv[2]
 maxThr = sys.argv[3]
 
