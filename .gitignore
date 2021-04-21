@@ -1,10 +1,9 @@
 code/*.exe
 .idea/*
 .idea
-data/*.csv
+*.csv
 venv
 code/dim_decoding
 code/dim_equalisation
-data/*.png
-.idea/*.iml
 *.png
+.idea/*.iml
