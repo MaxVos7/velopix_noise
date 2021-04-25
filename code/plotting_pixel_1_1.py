@@ -19,7 +19,6 @@ def make_plot_for_file(axis, filename, minDac=None, maxDac=None):
 def plot_pixel(filename, minDac=None, maxDac=None):
     make_plot_for_file(plt.subplot(111), filename, minDac, maxDac)
     plt.show()
-    plt.savefig('../data/pixel_plots/' + filename + '.png')
     plt.close()
 
 
