@@ -1,13 +1,8 @@
-# In this file we would like to study the behaviour per pixel.
-# We want to make a prediction using trim 0 and F for a third trim level and see per pixel how well
-# that prediction fits.
+# This files created some matrix files, for prediction offset and several masks.
 
-# First we fetch the noise mean matrix for trim 0 1 and a third trim level.
-# Then we go want to be able to make a prediction per pixel.
 import glob
-
-import numpy
 import numpy as np
+import offset_and_mask_handler
 
 PIXEL_MATRIX_WIDTH = 256
 PIXEL_MATRIX_HEIGHT = 256
@@ -71,33 +66,52 @@ def make_prediction_offset_matrix(trims_to_predict_with: list, trim_to_predict: 
     real_values_matrix = get_trim_matrix(trim_to_predict)
     predicted_matrix = make_prediction_matrix(trims_to_predict_with, trim_to_predict)
 
-    result = np.zeros((PIXEL_MATRIX_WIDTH, PIXEL_MATRIX_HEIGHT))
+    prediction_offset = np.zeros((PIXEL_MATRIX_WIDTH, PIXEL_MATRIX_HEIGHT))
     masked = np.zeros((PIXEL_MATRIX_WIDTH, PIXEL_MATRIX_HEIGHT))
 
     for i in range(PIXEL_MATRIX_WIDTH):
         for j in range(PIXEL_MATRIX_HEIGHT):
-            if real_values_matrix[i][j] != 0 and predicted_matrix[i][j] != 0:
-                result[i][j] = predicted_matrix[i][j] - real_values_matrix[i][j]
-            else:
+            prediction_offset[i][j] = predicted_matrix[i][j] - real_values_matrix[i][j]
+            if real_values_matrix[i][j] == 0 or predicted_matrix[i][j] == 0:
                 masked[i][j] = 1
 
-    return result, masked
+    return prediction_offset, masked
 
 
-prediction_offset_trim_1, masked_trim_1 = make_prediction_offset_matrix(['0', 'F'], '1')
-prediction_offset_trim_3, masked_trim_3 = make_prediction_offset_matrix(['0', 'F'], '3')
-prediction_offset_trim_d, masked_trim_d = make_prediction_offset_matrix(['0', 'F'], 'D')
+def make_mask_file_for_pixels_outside_std(matrix: np.ndarray, mean: int, std: int, stdAmount: int):
+    (width, height) = matrix.shape
+
+    masked = np.zeros(matrix.shape)
+
+    for i in np.arange(width):
+        for j in np.arange(height):
+            if matrix[i][j] > mean + std * stdAmount or matrix[i][j] < mean - std * stdAmount:
+                masked[i][j] = 1
+
+    return masked
 
 
-def save_prediction_and_mask(prediction_matrix: np.ndarray, mask_matrix: np.ndarray, predicted_trim: str):
-    numpy.savetxt(f"../../data/prediction_offset_matrices/Prediction_Offset_0F_to_{predicted_trim}.csv",
-                  prediction_matrix,
-                  delimiter=',', fmt='%i')
-    numpy.savetxt(f"../../data/prediction_offset_matrices/Masked_0F_to_{predicted_trim}.csv", mask_matrix,
-                  delimiter=',', fmt='%i')
+prediction_base = ['0', 'F']
 
+for trim in ['1', '3']:
+    prediction_offset, zero_mean_mask = make_prediction_offset_matrix(prediction_base, trim)
+    offset_and_mask_handler.make_file_from_matrix(zero_mean_mask, trim,
+                                                  mask_name='Zero_Mean',
+                                                  prediction_base=''.join(prediction_base)
+                                                  )
+    offset_and_mask_handler.make_file_from_matrix(prediction_offset, trim,
+                                                  mask_name='Prediction_Offset',
+                                                  for_mask=False,
+                                                  prediction_base=''.join(prediction_base)
+                                                  )
 
-# FIXME: The path below might not be correct if this file is moved to another directory.
-save_prediction_and_mask(prediction_offset_trim_1, masked_trim_1, '1')
-save_prediction_and_mask(prediction_offset_trim_3, masked_trim_3, '3')
-save_prediction_and_mask(prediction_offset_trim_d, masked_trim_d, 'D')
+    # filter for zero mean mask and creating mask for pixels outside 1 std.
+    offset_array_without_zero_mean = offset_and_mask_handler.filter_masked_pixels(prediction_offset, [zero_mean_mask])
+    outside_std_mask = make_mask_file_for_pixels_outside_std(prediction_offset,
+                                                             np.mean(offset_array_without_zero_mean),
+                                                             np.std(offset_array_without_zero_mean), stdAmount=5)
+
+    offset_and_mask_handler.make_file_from_matrix(outside_std_mask, trim,
+                                                  mask_name='Outside_5Std',
+                                                  prediction_base=''.join(prediction_base)
+                                                  )
