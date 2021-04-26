@@ -2,7 +2,7 @@ import matplotlib.colors
 import numpy as np
 import glob
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+import matplotlib.patches as mpatches
 
 
 def fetch_noise_mean_matrices(trims: list) -> list[np.ndarray]:
@@ -33,7 +33,9 @@ bitmap[result == 2] = [1, 0, 0]  # Cat B: red
 bitmap[result == 3] = [0, 0, 1]  # Cat C: blue
 bitmap[result == 4] = [0, 0.502, 0]  # Cat D: green
 bitmap[result == 5] = [1, 0.647, 0]  # Cat E: orange -> from matplotlib.color.to_rgba("orange")
-bitmap[result == 0] = [1, 1, 1]  # No mask: light grey
+bitmap[result == 0] = [0.9, 0.9, 0.9]  # No mask: light grey
+
+plt.axis([-2, 257, -2, 257])
 
 plt.imshow(bitmap)
 plt.show()

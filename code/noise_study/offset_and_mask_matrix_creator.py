@@ -2,7 +2,7 @@
 
 import glob
 import numpy as np
-import offset_and_mask_handler
+import offset_and_mask_handler as mh
 
 PIXEL_MATRIX_WIDTH = 256
 PIXEL_MATRIX_HEIGHT = 256
@@ -78,14 +78,16 @@ def make_prediction_offset_matrix(trims_to_predict_with: list, trim_to_predict: 
     return prediction_offset, masked
 
 
-def make_mask_file_for_pixels_outside_std(matrix: np.ndarray, mean: int, std: int, stdAmount: int):
+def make_mask_file_for_pixels_outside_std(matrix: np.ndarray, dead_mask: np.ndarray, mean: int, std: int,
+                                          std_amount: int):
     (width, height) = matrix.shape
 
     masked = np.zeros(matrix.shape)
 
     for i in np.arange(width):
         for j in np.arange(height):
-            if matrix[i][j] > mean + std * stdAmount or matrix[i][j] < mean - std * stdAmount:
+            if (matrix[i][j] > mean + std * std_amount or matrix[i][j] < mean - std * std_amount) \
+                    and dead_mask[i][j] == 0:
                 masked[i][j] = 1
 
     return masked
@@ -93,25 +95,27 @@ def make_mask_file_for_pixels_outside_std(matrix: np.ndarray, mean: int, std: in
 
 prediction_base = ['0', 'F']
 
-for trim in ['1', '3']:
-    prediction_offset, zero_mean_mask = make_prediction_offset_matrix(prediction_base, trim)
-    offset_and_mask_handler.make_file_from_matrix(zero_mean_mask, trim,
-                                                  mask_name='Zero_Mean',
-                                                  prediction_base=''.join(prediction_base)
-                                                  )
-    offset_and_mask_handler.make_file_from_matrix(prediction_offset, trim,
-                                                  mask_name='Prediction_Offset',
-                                                  for_mask=False,
-                                                  prediction_base=''.join(prediction_base)
-                                                  )
+for trim in ['1', '3', 'D']:
+    prediction_offset, dead_mask = make_prediction_offset_matrix(prediction_base, trim)
+    mh.make_file_from_matrix(prediction_offset, trim,
+                             mask_name='Prediction_Offset',
+                             for_mask=False,
+                             prediction_base=''.join(prediction_base)
+                             )
+    mh.make_file_from_matrix(dead_mask, trim,
+                             mask_name='Dead',
+                             prediction_base=''.join(prediction_base)
+                             )
 
     # filter for zero mean mask and creating mask for pixels outside 1 std.
-    offset_array_without_zero_mean = offset_and_mask_handler.filter_masked_pixels(prediction_offset, [zero_mean_mask])
+    offset_array_without_zero_mean = mh.filter_masked_pixels(prediction_offset, [dead_mask])
     outside_std_mask = make_mask_file_for_pixels_outside_std(prediction_offset,
-                                                             np.mean(offset_array_without_zero_mean),
-                                                             np.std(offset_array_without_zero_mean), stdAmount=5)
+                                                             dead_mask, np.mean(offset_array_without_zero_mean),
+                                                             np.std(offset_array_without_zero_mean),
+                                                             std_amount=2
+                                                             )
 
-    offset_and_mask_handler.make_file_from_matrix(outside_std_mask, trim,
-                                                  mask_name='Outside_5Std',
-                                                  prediction_base=''.join(prediction_base)
-                                                  )
+    mh.make_file_from_matrix(outside_std_mask, trim,
+                             mask_name='Outside_2Std_Not_Dead',
+                             prediction_base=''.join(prediction_base)
+                             )
