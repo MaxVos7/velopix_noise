@@ -94,8 +94,9 @@ def make_mask_file_for_pixels_outside_std(matrix: np.ndarray, dead_mask: np.ndar
 
 
 prediction_base = ['0', 'F']
+trims_to_predict = list(map(lambda value: format(value, 'x').upper(), np.arange(1, 15)))
 
-for trim in ['3']:
+for trim in trims_to_predict:
     prediction_offset, dead_mask = make_prediction_offset_matrix(prediction_base, trim)
     mh.make_file_from_matrix(prediction_offset, trim,
                              mask_name='Prediction_Offset',

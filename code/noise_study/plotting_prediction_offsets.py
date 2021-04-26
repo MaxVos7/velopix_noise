@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import offset_and_mask_handler
+from matplotlib import cm
 
 
 def make_prediction_offset_plot(arrays: list, trims_to_plot: list):
@@ -12,10 +13,10 @@ def make_prediction_offset_plot(arrays: list, trims_to_plot: list):
     minimum = min(map(np.min, arrays))
     maximum = max(map(np.max, arrays))
 
-    colors = ['red', 'blue', 'green', 'orange', 'magenta', 'cyan']
+    colors = cm.get_cmap('viridis', len(arrays) + 1)
     for index in range(len(trims_to_plot)):
         make_histogram(axs[index], arrays[index], trims_to_plot[index],
-                       minimum, maximum, colors[index])
+                       minimum, maximum, colors(index))
 
     axs[-1].set(xlabel='predicted value - real value (DAC current)')
     plt.show()
@@ -61,4 +62,4 @@ def make_plots(trim_levels: list, prediction_bases: list, mask_types: list):
                                 arrays_to_plot_labels)
 
 
-make_plots(['1', '3', 'D'], ['0F'], ['Zero_Mean', 'Outside_2Std'])
+make_plots(list(map(lambda value: format(value, 'x').upper(), np.arange(1, 15))), ['0F'], ['Dead'])
