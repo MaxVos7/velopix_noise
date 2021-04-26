@@ -183,10 +183,13 @@ int process_scan(string filename)
   // === Process the Data ===
   
   // (0) study individual pixels
-  string name_pix = prefix + "_Pixel_1_1.csv";
+  int row = 1;
+  int col = 1;
+
+  string name_pix = prefix + "_Pixel_" + to_string(row) + "_" + to_string(col) + ".csv";
   FILE *file_pix = fopen(name_pix.c_str(), "w");
   int cdac;
-  int i = 257; // pixel (1,1)
+  int i = row * 256 + col;
   for (int dac=0; dac<npoints; ++dac) {
     cdac = dac_max - dac*dac_step;
     fprintf(file_pix, "%04d, %02d\n", cdac, matrix[i*npoints + dac]);
