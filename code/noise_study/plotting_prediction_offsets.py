@@ -33,7 +33,9 @@ def make_histogram(ax: plt.axes, prediction_offset_array: list, trim_to_predict:
             horizontalalignment='center',
             transform=ax.transAxes,
             bbox=dict(facecolor='white', alpha=1),
-            fontsize=8)
+            fontsize=8,
+            color=color
+            )
     ax.label_outer()
     ax.set(ylabel='count')
 
@@ -59,4 +61,4 @@ def make_plots(trim_levels: list, prediction_bases: list, mask_types: list):
                                 arrays_to_plot_labels)
 
 
-make_plots(['1'], ['0F'], ['Zero_Mean', 'Outside_Std'])
+make_plots(['1', '3', 'D'], ['0F'], ['Zero_Mean', 'Outside_2Std'])
