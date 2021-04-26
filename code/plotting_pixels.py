@@ -10,7 +10,7 @@ def make_plot_for_file(axis, filename, minDac=None, maxDac=None):
     dacList = data[:, 0]
 
     maxDacIndex = np.where(dacList <= maxDac)[0][0] if maxDac else 0
-    minDacIndex = np.where(dacList >= minDac)[0][-1] if (minDac) else len(dacList) - 1
+    minDacIndex = np.where(dacList >= minDac)[0][-1] if minDac else len(dacList) - 1
 
     axis.plot(data[maxDacIndex:minDacIndex, 0], data[maxDacIndex:minDacIndex, 1], marker='.')
 
@@ -36,9 +36,11 @@ def get_all_pixel_file_names():
     return list(map(lambda file: file.split('\\')[-1].split('.')[0], files))
 
 
-fileNames = get_all_pixel_file_names()
+# fileNames = get_all_pixel_file_names()
 
 # for fileName in fileNames:
 #     plot_pixel(fileName)
 
-make_combined_plot_of_all_pixels(fileNames, 1250, 1600)
+# make_combined_plot_of_all_pixels(fileNames, 1250, 1600)
+
+# plot_pixel("Module1_VP0-0_ECS_Scan_Trim1_1600_5_100_1of1_Pixel_27_73")
