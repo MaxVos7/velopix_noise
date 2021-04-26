@@ -13,7 +13,7 @@ def get_trim_matrix(trim_level: str) -> np.array:
     This method fetches the noise mean array for a specific trim level.
     For this it uses the "Module1_VP0-0_Trim*_Noise_mean.csv file.
     """
-    files = glob.glob(f"../../data/Module1_VP0-0_Trim{trim_level}_Noise_Mean.csv")
+    files = glob.glob(f"../../data/Module3_VP0-0_Trim{trim_level}_Noise_Mean.csv")
     if len(files) < 1:
         raise FileNotFoundError(f"No file found for Noise mean of trim level {trim_level}.")
     else:
@@ -95,7 +95,7 @@ def make_mask_file_for_pixels_outside_std(matrix: np.ndarray, dead_mask: np.ndar
 
 prediction_base = ['0', 'F']
 
-for trim in ['1', '3', 'D']:
+for trim in ['3']:
     prediction_offset, dead_mask = make_prediction_offset_matrix(prediction_base, trim)
     mh.make_file_from_matrix(prediction_offset, trim,
                              mask_name='Prediction_Offset',

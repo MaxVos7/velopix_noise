@@ -9,7 +9,7 @@ def getDecimalTrimLevel(file: str) -> int:
 
 
 def getMeanAveragePerTrim() -> np.array:
-    files = glob.glob('../../data/Module1_VP0-0_ECS_Scan_Trim*_Noise_Mean.csv')
+    files = glob.glob('../../data/Module3_VP0-0_ECS_Scan_Trim*_Noise_Mean.csv')
 
     trimLevelArray = []
     meanAvarageArray = []
