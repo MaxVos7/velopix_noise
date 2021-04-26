@@ -5,7 +5,7 @@ import glob
 import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib import cm
 
 
 ### Plot Scan Summary ###
@@ -24,8 +24,7 @@ def plot_scans(filename, dacMin, dacMax):
     theFig.suptitle(mytext, fontsize=20, horizontalalignment='center', verticalalignment='center', color='black')
 
     ### Loop over Data
-    mycolors = ['red', 'blue', 'green', 'orange', 'black', 'yellow', 'cyan', 'magenta']
-    hands = mycolors
+    mycolors = cm.get_cmap('viridis', len(files) + 1)
     handles = []
 
     for i in range(len(files)):
@@ -34,13 +33,12 @@ def plot_scans(filename, dacMin, dacMax):
         logs = hist_data[0].astype(float)
         logs[logs == 108] = eps
 
-        plt.semilogy(hist_data[1][:-1], logs, color=mycolors[i], linestyle='-', linewidth=2)
+        plt.semilogy(hist_data[1][:-1], logs, color=mycolors(i), linestyle='-', linewidth=2)
 
         words = files[i].split('_')
-        hands[i] = mpatches.Patch(color=mycolors[i], label=words[-3])
-        handles.append(hands[i])
+        handles.append(mpatches.Patch(color=mycolors(i), label=words[-3]))
 
-    plt.legend(bbox_to_anchor=(1.042, 0.3), loc=2, borderaxespad=0, handles=handles, frameon=False, handlelength=1.25)
+    plt.legend(bbox_to_anchor=(1.042, 0.8), loc=2, borderaxespad=0, handles=handles, frameon=False, handlelength=1.25)
 
     ### Axes ###
     plt.axis([dacMin, dacMax, 0.9, hist_max])
