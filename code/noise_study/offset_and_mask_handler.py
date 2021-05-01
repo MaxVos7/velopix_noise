@@ -11,7 +11,7 @@ def make_file_path(trim: str, mask_name: str = '', for_mask: bool = True, predic
 def fetch_prediction_offset_matrix(trim: str, prediction_base: str = '0F') -> np.ndarray:
     files = glob.glob(make_file_path(trim, for_mask=False, prediction_base=prediction_base))
     if len(files) < 1:
-        raise FileNotFoundError(f"There is no prediction offset matrix for trim {trim}.")
+        raise FileNotFoundError(f"There is no prediction offset matrix for trim {trim} with base {prediction_base}.")
 
     prediction_matrix = np.loadtxt(files[0], delimiter=',')
 
