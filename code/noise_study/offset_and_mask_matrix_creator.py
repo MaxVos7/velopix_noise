@@ -23,12 +23,12 @@ def get_trim_matrix(trim_level: str) -> np.array:
 
 
 def get_noise_mean_prediction(dec_trim_array: list, trim_matrix_array: list, row: int, col: int,
-                              trim_level: str) -> int:
+                              trim_level: str, prediction_degree: int) -> int:
     dec_trim_level = int(trim_level, 16)
 
     trim_data_array = list(map(lambda trimMatrix: trimMatrix[row][col], trim_matrix_array))
 
-    poly = np.poly1d(np.polyfit(dec_trim_array, trim_data_array, 1))
+    poly = np.poly1d(np.polyfit(dec_trim_array, trim_data_array, prediction_degree))
 
     return round(poly(dec_trim_level))
 
@@ -41,7 +41,7 @@ def check_for_zero_values(trim_data_array: list, row: int, col: int) -> bool:
     return False
 
 
-def make_prediction_matrix(trims_to_predict_with: list, trim_to_predict: str) -> np.array:
+def make_prediction_matrix(trims_to_predict_with: list, trim_to_predict: str, prediction_degree: int) -> np.array:
     """
     This method makes an array with the distance to the predicted value per pixel.
 
@@ -57,14 +57,15 @@ def make_prediction_matrix(trims_to_predict_with: list, trim_to_predict: str) ->
         for j in range(PIXEL_MATRIX_HEIGHT):
             if not check_for_zero_values(trims_to_predict_with_matrices, i, j):
                 result[i][j] = get_noise_mean_prediction(dec_trim_array, trims_to_predict_with_matrices, i, j,
-                                                         trim_to_predict)
+                                                         trim_to_predict, prediction_degree)
 
     return result
 
 
-def make_prediction_offset_matrix(trims_to_predict_with: list, trim_to_predict: str) -> (np.array, np.array):
+def make_prediction_offset_matrix(trims_to_predict_with: list, trim_to_predict: str, prediction_degree: int) -> (
+        np.array, np.array):
     real_values_matrix = get_trim_matrix(trim_to_predict)
-    predicted_matrix = make_prediction_matrix(trims_to_predict_with, trim_to_predict)
+    predicted_matrix = make_prediction_matrix(trims_to_predict_with, trim_to_predict, prediction_degree)
 
     prediction_offset = np.zeros((PIXEL_MATRIX_WIDTH, PIXEL_MATRIX_HEIGHT))
     masked = np.zeros((PIXEL_MATRIX_WIDTH, PIXEL_MATRIX_HEIGHT))
@@ -94,10 +95,11 @@ def make_mask_file_for_pixels_outside_std(matrix: np.ndarray, dead_mask: np.ndar
 
 
 prediction_base = ['0', 'F']
+prediction_degree = 1
 trims_to_predict = list(map(lambda value: format(value, 'x').upper(), np.arange(1, 15)))
 
 for trim in trims_to_predict:
-    prediction_offset, dead_mask = make_prediction_offset_matrix(prediction_base, trim)
+    prediction_offset, dead_mask = make_prediction_offset_matrix(prediction_base, trim, prediction_degree)
     mh.make_file_from_matrix(prediction_offset, trim,
                              mask_name='Prediction_Offset',
                              for_mask=False,
@@ -108,15 +110,16 @@ for trim in trims_to_predict:
                              prediction_base=''.join(prediction_base)
                              )
 
-    # filter for zero mean mask and creating mask for pixels outside 1 std.
-    offset_array_without_zero_mean = mh.filter_masked_pixels(prediction_offset, [dead_mask])
-    outside_std_mask = make_mask_file_for_pixels_outside_std(prediction_offset,
-                                                             dead_mask, np.mean(offset_array_without_zero_mean),
-                                                             np.std(offset_array_without_zero_mean),
-                                                             std_amount=2
-                                                             )
+    for i in np.arange(1, 6):
+        # filter for zero mean mask and creating mask for pixels outside 1 std.
+        offset_array_without_zero_mean = mh.filter_masked_pixels(prediction_offset, [dead_mask])
+        outside_std_mask = make_mask_file_for_pixels_outside_std(prediction_offset,
+                                                                 dead_mask, np.mean(offset_array_without_zero_mean),
+                                                                 np.std(offset_array_without_zero_mean),
+                                                                 std_amount=i
+                                                                 )
 
-    mh.make_file_from_matrix(outside_std_mask, trim,
-                             mask_name='Outside_2Std_Not_Dead',
-                             prediction_base=''.join(prediction_base)
-                             )
+        mh.make_file_from_matrix(outside_std_mask, trim,
+                                 mask_name=f"Outside_{i}Std_Not_Dead",
+                                 prediction_base=''.join(prediction_base)
+                                 )
