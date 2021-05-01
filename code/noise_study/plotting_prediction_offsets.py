@@ -13,7 +13,7 @@ def make_prediction_offset_plot(arrays: list, trims_to_plot: list):
     minimum = min(map(np.min, arrays))
     maximum = max(map(np.max, arrays))
 
-    colors = cm.get_cmap('viridis', len(arrays) + 1)
+    colors = cm.get_cmap('copper', len(arrays) + 1)
     for index in range(len(trims_to_plot)):
         make_histogram(axs[index], arrays[index], trims_to_plot[index],
                        minimum, maximum, colors(index))
@@ -30,7 +30,7 @@ def make_histogram(ax: plt.axes, prediction_offset_array: list, trim_to_predict:
     mean = round(np.mean(prediction_offset_array), 2)
     ax.semilogy(hist_data[1][:-1], logs, linestyle='-', color=color)
     ax.set_yticks([1, 100, 10000])
-    ax.text(.9, .7, f"Trim {trim_to_predict}\nmean: {mean}",
+    ax.text(.9, .6, f"Trim {trim_to_predict}\nmean: {mean}",
             horizontalalignment='center',
             transform=ax.transAxes,
             bbox=dict(facecolor='white', alpha=1),
@@ -41,25 +41,29 @@ def make_histogram(ax: plt.axes, prediction_offset_array: list, trim_to_predict:
     ax.set(ylabel='count')
 
 
-def make_plots(trim_levels: list, prediction_bases: list, mask_types: list):
+def make_plots(trim_levels: list, prediction_bases: list, mask_types_array: list):
     arrays_to_plot = []
     arrays_to_plot_labels = []
 
     for prediction_base in prediction_bases:
         for trim in trim_levels:
-            offset_matrix = offset_and_mask_handler.fetch_prediction_offset_matrix(trim,
-                                                                                   prediction_base=prediction_base
-                                                                                   )
-            offset_without_zero_mean = offset_and_mask_handler.filter_masked_pixels(offset_matrix,
-                                                                                    trim=trim,
-                                                                                    mask_types=mask_types,
-                                                                                    prediction_base=prediction_base
-                                                                                    )
-            arrays_to_plot.append(offset_without_zero_mean)
-            arrays_to_plot_labels.append(prediction_base + '->' + trim)
+            for mask_types in mask_types_array:
+                offset_matrix = offset_and_mask_handler.fetch_prediction_offset_matrix(trim,
+                                                                                       prediction_base=prediction_base
+                                                                                       )
+                offset_without_zero_mean = offset_and_mask_handler.filter_masked_pixels(offset_matrix,
+                                                                                        trim=trim,
+                                                                                        mask_types=mask_types,
+                                                                                        prediction_base=prediction_base
+                                                                                        )
+                arrays_to_plot.append(offset_without_zero_mean)
+                arrays_to_plot_labels.append(prediction_base + '->' + trim)
 
     make_prediction_offset_plot(arrays_to_plot,
                                 arrays_to_plot_labels)
 
 
-make_plots(list(map(lambda value: format(value, 'x').upper(), np.arange(1, 15))), ['0F'], ['Dead'])
+# trim_levels = list(map(lambda value: format(value, 'x').upper(), np.arange(1,15)))
+trim_levels = ['1', '5', 'A', 'E']
+
+make_plots(trim_levels, ['0F', '04DF'], [['Dead']])
