@@ -4,8 +4,9 @@ import numpy as np
 BASE_PATH = "../../data/prediction_offset_matrices/"
 
 
-def make_file_path(trim: str, mask_name: str = '', for_mask: bool = True, prediction_base: str = '0F'):
-    return f"{BASE_PATH}{'Mask_' + mask_name if for_mask else 'Prediction_Offset'}_{prediction_base}_to_{trim}.csv"
+def make_file_path(trim: str, mask_name: str = '', for_mask: bool = True, prediction_base: str = '0F', module: int = 1,
+                   vp: str = '0-0'):
+    return f"{BASE_PATH}Module{module}_VP{vp}_{prediction_base}_to_{trim}_{'Mask_' + mask_name if for_mask else 'Prediction_Offset'}.csv"
 
 
 def fetch_prediction_offset_matrix(trim: str, prediction_base: str = '0F') -> np.ndarray:
@@ -18,13 +19,21 @@ def fetch_prediction_offset_matrix(trim: str, prediction_base: str = '0F') -> np
     return prediction_matrix
 
 
-def make_file_from_matrix(matrix: np.ndarray,
-                          trim: str,
-                          mask_name: str = "",
-                          prediction_base: str = "0F",
-                          for_mask: bool = True):
+def save_matrix(matrix: np.ndarray,
+                trim: str,
+                mask_name: str = "",
+                prediction_base: str = "0F",
+                for_mask: bool = True,
+                module: int = None,
+                vp: str = None
+                ):
     np.savetxt(
-        make_file_path(trim, mask_name=mask_name, prediction_base=prediction_base, for_mask=for_mask),
+        make_file_path(trim,
+                       mask_name=mask_name,
+                       prediction_base=prediction_base,
+                       for_mask=for_mask,
+                       module=module,
+                       vp=vp),
         matrix,
         delimiter=',',
         fmt='%i'
